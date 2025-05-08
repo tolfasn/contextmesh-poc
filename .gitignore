@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-workspace
+
+# FAISS index files
+*.faiss
+*.faiss.map
+
+# macOS
+.DS_Store
+
+# Ollama models (if they were ever to be downloaded here by mistake)
+ollama_models/
+
+# Test reports
+htmlcov/
+.pytest_cache/

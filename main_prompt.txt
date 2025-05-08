@@ -1,0 +1,262 @@
+You are creating a Python project called "ContextMesh PoC".
+The project is a Command Line Interface (CLI) tool to help developers understand the "why" behind code changes.
+
+Please generate the following project structure and initial code:
+
+1.  A main CLI file named `contextmesh_cli.py` in the root directory.
+    * This file should use the `click` library.
+    * Include a main command group: `@click.group() def cli(): pass`.
+    * Include a placeholder command `why` under `cli`: `@cli.command() @click.argument('query_or_sha') def why(query_or_sha): print(f"Analyzing: {query_or_sha}")`.
+
+2.  A directory named `core` in the root directory.
+
+3.  Inside the `core` directory, create the following Python files with basic placeholder content:
+    * `git_interface.py`:
+        ```python
+        # core/git_interface.py
+        # This module will handle interactions with Git repositories.
+        import pygit2
+
+        class GitProcessor:
+            def __init__(self, repo_path):
+                self.repo_path = repo_path
+                # try:
+                #     self.repo = pygit2.Repository(self.repo_path)
+                # except pygit2.GitError:
+                #     raise ValueError(f"Could not open repository at {self.repo_path}")
+
+            def get_commit_history(self):
+                """
+                Parses the commit history of the repository.
+                Returns a list of commit data (e.g., sha, author, message, timestamp).
+                """
+                # Placeholder: Implement using pygit2
+                print(f"Placeholder: Parsing commit history for {self.repo_path}")
+                return []
+
+        if __name__ == '__main__':
+            # Example usage (for testing purposes)
+            # processor = GitProcessor('.') # Example: current directory as repo
+            # history = processor.get_commit_history()
+            # for commit in history:
+            #     print(commit)
+            pass
+        ```
+    * `embedding_generator.py`:
+        ```python
+        # core/embedding_generator.py
+        # This module will generate text embeddings.
+        from sentence_transformers import SentenceTransformer
+
+        class EmbeddingModel:
+            def __init__(self, model_name='bge-small-en-v1.5'):
+                self.model = SentenceTransformer(model_name)
+
+            def generate_embeddings(self, texts: list[str]):
+                """
+                Generates embeddings for a list of texts.
+                Returns a list of embeddings (e.g., NumPy arrays).
+                """
+                if not texts:
+                    return []
+                embeddings = self.model.encode(texts, convert_to_numpy=True)
+                return embeddings
+
+        if __name__ == '__main__':
+            # Example usage
+            # model = EmbeddingModel()
+            # sample_texts = ["This is a test commit message.", "Fixing a critical bug."]
+            # embeddings = model.generate_embeddings(sample_texts)
+            # for i, text in enumerate(sample_texts):
+            #     print(f"Embedding for '{text}': {embeddings[i][:5]}...") # print first 5 dimensions
+            pass
+        ```
+    * `vector_store_manager.py`:
+        ```python
+        # core/vector_store_manager.py
+        # This module will manage the FAISS vector store.
+        import faiss
+        import numpy as np
+        import os
+
+        class FaissVectorStore:
+            def __init__(self, index_file_path='contextmesh.faiss', dimension=384):
+                self.index_file_path = index_file_path
+                self.dimension = dimension
+                self.index = None
+                # self.load_index() # Optionally load on init
+
+            def add_embeddings(self, embeddings: np.ndarray, ids=None):
+                """Adds embeddings to the FAISS index."""
+                if self.index is None:
+                    # Using IndexIDMap to store original IDs if provided
+                    # self.index = faiss.IndexIDMap(faiss.IndexFlatL2(self.dimension))
+                    # Or a simple IndexFlatL2 if IDs are not critical for direct mapping in FAISS
+                    self.index = faiss.IndexFlatL2(self.dimension)
+                    print("Initialized new FAISS index.")
+
+                if ids is not None and isinstance(self.index, faiss.IndexIDMap):
+                    if len(embeddings) != len(ids):
+                        raise ValueError("Embeddings and IDs must have the same length.")
+                    self.index.add_with_ids(embeddings.astype('float32'), np.array(ids).astype('int64'))
+                else:
+                    self.index.add(embeddings.astype('float32'))
+                print(f"Added {len(embeddings)} embeddings to index. Total: {self.index.ntotal}")
+
+
+            def search_similar(self, query_embedding: np.ndarray, k=5):
+                """Searches for k most similar embeddings."""
+                if self.index is None or self.index.ntotal == 0:
+                    print("Index is not initialized or is empty.")
+                    return [], []
+
+                # Ensure query_embedding is 2D
+                if query_embedding.ndim == 1:
+                    query_embedding = np.expand_dims(query_embedding, axis=0)
+
+                distances, indices = self.index.search(query_embedding.astype('float32'), k)
+                return distances, indices
+
+            def save_index(self):
+                """Saves the FAISS index to a file."""
+                if self.index:
+                    faiss.write_index(self.index, self.index_file_path)
+                    print(f"Index saved to {self.index_file_path}")
+                else:
+                    print("No index to save.")
+
+            def load_index(self):
+                """Loads the FAISS index from a file."""
+                if os.path.exists(self.index_file_path):
+                    self.index = faiss.read_index(self.index_file_path)
+                    print(f"Index loaded from {self.index_file_path}. Total entries: {self.index.ntotal}")
+                else:
+                    print(f"Index file {self.index_file_path} not found. A new index will be created on add.")
+                    # Initialize a new empty index so methods don't fail before first add
+                    # self.index = faiss.IndexFlatL2(self.dimension)
+
+
+        if __name__ == '__main__':
+            # Example Usage
+            # store = FaissVectorStore(dimension=5) # Small dimension for testing
+            # test_embeddings = np.array([[1,2,3,4,5], [6,7,8,9,10]], dtype='float32')
+            # store.add_embeddings(test_embeddings)
+            # store.save_index()
+            #
+            # new_store = FaissVectorStore(dimension=5)
+            # new_store.load_index()
+            # query = np.array([[1.1,2.1,3.1,4.1,5.1]], dtype='float32')
+            # distances, indices = new_store.search_similar(query, k=1)
+            # print(f"Search results: Distances: {distances}, Indices: {indices}")
+            pass
+        ```
+    * `llm_connector.py`:
+        ```python
+        # core/llm_connector.py
+        # This module will connect to the LLM (Ollama).
+        import requests
+        import json
+
+        class OllamaConnector:
+            def __init__(self, base_url='http://localhost:11434'):
+                self.base_url = base_url
+
+            def query_llm(self, model_name: str, prompt_text: str, stream=False):
+                """
+                Queries the specified Ollama model with the given prompt.
+                Returns the LLM's response text.
+                """
+                api_url = f"{self.base_url}/api/generate"
+                payload = {
+                    "model": model_name,
+                    "prompt": prompt_text,
+                    "stream": stream
+                }
+                try:
+                    response = requests.post(api_url, json=payload)
+                    response.raise_for_status() # Raise an exception for HTTP errors
+
+                    if stream:
+                        full_response_text = ""
+                        for line in response.iter_lines():
+                            if line:
+                                json_line = json.loads(line.decode('utf-8'))
+                                full_response_text += json_line.get("response", "")
+                                if json_line.get("done"):
+                                    break
+                        return full_response_text.strip()
+                    else:
+                        response_data = response.json()
+                        return response_data.get("response", "").strip()
+
+                except requests.exceptions.RequestException as e:
+                    print(f"Error connecting to Ollama API: {e}")
+                    return f"Error: Could not connect to Ollama. Is it running at {self.base_url}?"
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON from Ollama: {e}")
+                    return "Error: Invalid response from Ollama."
+
+
+        if __name__ == '__main__':
+            # Example usage:
+            # connector = OllamaConnector()
+            # prompt = "Why is the sky blue?"
+            # model = "mistral" # Make sure you have pulled this model with `ollama pull mistral`
+            # response_text = connector.query_llm(model, prompt)
+            # print(f"LLM Response: {response_text}")
+            pass
+        ```
+
+4.  A `README.md` file in the root directory with basic project information (you can fill this in more later).
+    ```markdown
+    # ContextMesh PoC
+
+    AI-powered developer intelligence platform PoC.
+    This CLI tool helps query the "why" behind code changes.
+
+    ## Setup
+    (Instructions to be added)
+
+    ## Usage
+    (Instructions to be added)
+    ```
+
+5.  A `requirements.txt` file in the root directory. List the libraries we installed in Module 0:
+    ```text
+    click
+    pygit2
+    sentence-transformers
+    faiss-cpu>=1.7.4
+    requests>=2.25.1
+    pytest>=6.2.4
+    # Add other direct dependencies here as they become clear
+    ```
+
+6.  A `.gitignore` file in the root directory:
+    ```text
+    # Python
+    __pycache__/
+    *.py[cod]
+    *$py.class
+
+    # Virtual environment
+    .venv/
+    venv/
+    ENV/
+
+    # IDE / Editor specific
+    .vscode/
+    .idea/
+    *.suo
+    *.ntvs*
+    *.njsproj
+    *.sln
+    *.sublime-workspace
+
+    # FAISS index file
+    contextmesh.faiss
+
+    # Other
+    *.DS_Store
+    ```
+Make sure all Python code is well-commented, explaining the purpose of each file and function.
