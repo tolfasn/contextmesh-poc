@@ -1,7 +1,14 @@
 # ContextMesh PoC
 
-AI-powered developer intelligence platform PoC.
-This CLI tool helps query the "why" behind code changes by indexing Git repositories and leveraging a local LLM.
+ContextMesh PoC (Proof of Concept) is a command-line developer intelligence tool designed to unravel the "why" behind code changes. In complex or legacy codebases, understanding the original intent, discussions, and decisions that led to a particular piece of code can be a significant challenge, slowing down development, onboarding, and debugging.
+
+This PoC tackles this by:
+1.  **Indexing Git Repositories:** It processes the commit history of a local Git repository.
+2.  **Semantic Understanding:** It leverages sentence-transformer models to create vector embeddings of commit messages, capturing their semantic meaning.
+3.  **Efficient Search:** These embeddings are stored in a FAISS vector index, allowing for fast similarity searches.
+4.  **LLM-Powered Explanation:** When a developer asks a question (either a natural language query or about a specific commit SHA), ContextMesh retrieves the most relevant commit messages from the index and uses a local Large Language Model (LLM) via Ollama (e.g., Mistral) to synthesize an explanation or provide context.
+
+The goal of this PoC is to demonstrate the feasibility of using AI to build a "semantic knowledge mesh" from developer artifacts (starting with commit messages) to provide quick, contextual answers and improve overall developer productivity and codebase comprehension.
 
 ## Project Structure
 
